@@ -36,7 +36,6 @@ $ ./game
 * Running Example : 
 
 ```bash
-$ ./game 
 [*] Enter name of player1 : user1
 [*] Player 'user1' ready 
 [*] Enter name of player2 : user2
@@ -105,5 +104,5 @@ $ ./game
 [*] Player user2 got 4 and moved from (7,7) -> (8,1)
 [*] Player user1 got 3 and moved from (9,8) -> (9,9)
 [*] user1 won the game
-[*] The playing board is destroyed
+[*] GAME OVER
 ```
