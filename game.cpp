@@ -9,11 +9,13 @@ using namespace std;
 # define NUMBER_OF_SNAKES 5
 # define SIZE 10
 
-int random(int upper_limit)   // upper_limit argument defines the max value this function can return,
+// upper_limit argument defines the max value this function can return,
+int random(int upper_limit)  
 {
   return rand() % upper_limit + 1;    // +1 done because dice roll is from 1 to 6 and not 0 to 5.
 }
 
+// Returns a random number from 1 to 6
 int diceRoll ()
 {
   return  random(6);   // 6 is the max value that can come.
@@ -22,11 +24,14 @@ int diceRoll ()
 class Snakes
 {
   public:
+    
+    // This is the constructor which calls the actual function.
     Snakes(pair<int,int> board[][SIZE])
     {
       insertSnakes(board);
     }
 
+    // This function simply inserts snake in the board randomly
     void insertSnakes(pair<int,int> board[][SIZE])
     {
       for (int counter = 0 ; counter < NUMBER_OF_SNAKES ; counter ++)
@@ -51,11 +56,13 @@ class Snakes
 class Ladders
 {
   public:
+    // This is the constructor which calls the actual function.
     Ladders(pair<int,int> board[][SIZE])
     {
       insertLadder(board);
     }
 
+    // This function simply inserts ladders in the board randomly
     void insertLadder(pair<int,int> board[][SIZE])
     {
       for (int counter = 0 ; counter < NUMBER_OF_LADDER ; counter ++)
@@ -147,17 +154,17 @@ class Board
     // Game has begun
     Board()
     {
-      // Initialising all boxes with their own values
+      // Initialising all boxes with their own values as initially there are no snakes or ladder inserted in the board.
       for (int row = 0 ; row < SIZE ; row ++)
       {
         for (int col = 0 ; col < SIZE ; col++)
         {
-          board_matrix[row][col] = pair<int,int>(row,col);
+          board_matrix[row][col] = pair<int,int>(row,col);    
         }
       }
 
       // The board matrix now has both snakes and ladders and the 2d array contains the location to which it points.
-      // For Ex : If a box say at (3,4)  has snake which take you to (2,3), then the board_matrix[3][4] will contain (2,3) to show that incase you arrive at this box then go back to this box.
+      // For Ex : If a box say at (3,4)  has snake which take you to (2,3), then the board_matrix[3][4] will contain (2,3) to show that incase you arrive at this box then go to board[2][3]
       // Similarly for ladder but it insted of decreasing, it increments the location towards the destination.
 
       snak = new Snakes(board_matrix);
@@ -170,7 +177,7 @@ class Board
     {
       delete snak;
       delete lad;
-      cout <<"[*] The playing board is destroyed"<<endl;
+      cout <<"[*] GAME OVER"<<endl;
     }
 
     void printBoard()
@@ -190,66 +197,64 @@ class Board
       cout<<endl;
     }
 
+    // This is the actual function which starts and runs the game untill 1 of the player wins the game.
     Player& playGame(Player &player1 , Player &player2)
     {
       bool turn = true;     // if true then player1 will execute else player2
+
+      // Untill one of the players win the game keep on playing the game and continue to roll the dice.
       while (true)
       {
         if (player1.won() || player2.won())
           break;
         int dice_value = diceRoll();
         int x_cord , y_cord;      // For new location
+        
+        // if true then player1 will execute else player2
         if (turn)
         {
           pair<int,int> location = player1.getLocation(); // got current location of this player.
           int new_numeric_loc = location.first*SIZE + location.second+1 + dice_value;
 
-          x_cord = new_numeric_loc / SIZE;
-          y_cord = new_numeric_loc % SIZE - 1;
+          x_cord = new_numeric_loc / SIZE;          // Row
+          y_cord = new_numeric_loc % SIZE - 1;      // Column
 
+          // When the column reaches -1 that means that we want the last element from the previous row.
           if (y_cord == -1)
           {
             x_cord -=1;
             y_cord = SIZE - 1;
           }
 
+          // reason for jumping to board_matrix[x_cord][y_cord].first and board_matrix[x_cord][y_cord].second instead of board_matrix[x_cord][y_cord] is because if there is a snake or ladder there then we will have to follow that path.
           pair<int,int> new_location = pair<int,int> (board_matrix[x_cord][y_cord].first , board_matrix[x_cord][y_cord].second);
-
-//          cout << "New numeric locatoin : "<< new_numeric_loc<<endl;
-//          cout << "x_cord : "<<x_cord<<", y_cord : "<<y_cord <<endl;
-//          cout << "value at board_matrix : " << board_matrix[x_cord][y_cord].first << " , "<<board_matrix[x_cord][y_cord].second<<endl;
-//
           player1.update_location( new_location.first , new_location.second , dice_value);   // Player1 does the dice roll and it's location is updated.
         }
+
         else
         {
           pair<int,int> location = player2.getLocation(); // got current location of this player.
           int new_numeric_loc = location.first*SIZE + location.second+1 + dice_value;
 
-          x_cord = new_numeric_loc / SIZE;
-          y_cord = new_numeric_loc % SIZE - 1;
+          x_cord = new_numeric_loc / SIZE;       // Row
+          y_cord = new_numeric_loc % SIZE - 1;   // Column
 
+          // When the column reaches -1 that means that we want the last element from the previous row.
           if (y_cord == -1)
           {
             x_cord -=1;
             y_cord = SIZE - 1;
           }
 
+          // reason for jumping to board_matrix[x_cord][y_cord].first and board_matrix[x_cord][y_cord].second instead of board_matrix[x_cord][y_cord] is because if there is a snake or ladder there then we will have to follow that path.
           pair<int,int> new_location = pair<int,int> (board_matrix[x_cord][y_cord].first , board_matrix[x_cord][y_cord].second);
-//          cout << "New numeric locatoin : "<< new_numeric_loc<<endl;
-//          cout << "x_cord : "<<x_cord<<", y_cord : "<<y_cord <<endl;
-//          cout << "value at board_matrix : " << board_matrix[x_cord][y_cord].first << " , "<<board_matrix[x_cord][y_cord].second<<endl;
-
           player2.update_location( new_location.first , new_location.second , dice_value);   // Player2 does the dice roll and it's location is updated.
         }
 
         turn = !turn;   // toggle turn for alternate dice roll turns
       }
 
-      if (player1.won())
-        return player1;
-      else
-        return player2;
+      return player1.won()?player1:player2;   // return winner of the game.
     }
 };
 
@@ -269,7 +274,7 @@ int main( int argc,  char *argv[])
   Board playing_board;
   playing_board.printBoard();
 
-  // Adding delay so that the board is printed first and visible for sufficient time.
+  // Adding delay so that the board is printed first and visible for sufficient time. (Not required , just added for visibility while running code)
   cout <<"[*] Starting game in 3 second"<<endl;
   sleep(3);
   Player &winner  = playing_board.playGame( player1, player2 );
