@@ -1,7 +1,7 @@
 
 #include<iostream>
 #include<stdlib.h>
-#include<bits/stdc++.h>
+#include<unistd.h>
 
 using namespace std;
 
@@ -9,7 +9,7 @@ using namespace std;
 # define NUMBER_OF_SNAKES 5
 # define SIZE 10
 
-int random(int upper_limit = SIZE-1)   // upper_limit argument defines the max value this function can return,
+int random(int upper_limit)   // upper_limit argument defines the max value this function can return,
 {
   return rand() % upper_limit + 1;    // +1 done because dice roll is from 1 to 6 and not 0 to 5.
 }
@@ -29,12 +29,22 @@ class Snakes
 
     void insertSnakes(pair<int,int> board[][SIZE])
     {
+      for (int counter = 0 ; counter < NUMBER_OF_SNAKES ; counter ++)
+      {
+        int x  = 0 ,y = 0;
+        while ( !(x>1) )  { x = random(SIZE-1); }
+        while ( !(y>1) )  { y = random(SIZE-1); }
+        pair<int,int> &temp_ref = board[x][y];
 
-
-    }
-
-    void printSnakes ()
-    {
+        if (temp_ref.first == x && temp_ref.second == y)  // this box currently points to iself only i.e no ladder or snake is attached to it
+        {
+          temp_ref.first  = x-1;
+          temp_ref.second = y-1;
+          cout << "[*] Added snake to ("<<x<<","<<y<<") it now points to ("<<temp_ref.first<<","<<temp_ref.second<<")"<<endl;
+        }
+        else
+          counter --;   // This is because if this board[x][y] already contains a snake or a ladder then don't modify this, and thus will have to retry with new co-ordinates.
+      }
     }
 };
 
@@ -48,10 +58,23 @@ class Ladders
 
     void insertLadder(pair<int,int> board[][SIZE])
     {
-    }
+      for (int counter = 0 ; counter < NUMBER_OF_LADDER ; counter ++)
+      {
+        int x  = SIZE-1,y = SIZE-1;
+        while ( !(x<SIZE-1) )  { x = random(SIZE-1); }
+        while ( !(y<SIZE-1) )  { y = random(SIZE-1); }
 
-    void printLadders ()
-    {
+        pair<int,int> &temp_ref = board[x][y];
+
+        if (temp_ref.first == x && temp_ref.second == y)    // this box currently points to iself only i.e no ladder or snake is attached to it
+        {
+          temp_ref.first  = x+1;
+          temp_ref.second = y+1;
+          cout << "[*] Added Ladder to ("<<x<<","<<y<<") it now points to ("<<temp_ref.first<<","<<temp_ref.second<<")"<<endl;
+        }
+        else
+          counter --;   // This is because if this board[x][y] already contains a snake or a ladder then don't modify this, and thus will have to retry with new co-ordinates.
+      }
     }
 };
 
@@ -74,7 +97,7 @@ class Player
     }
 
     // This function takes accound the value that arrived on dice throw and increments
-    void update_location(int row , int column)
+    void update_location(int row , int column, int dice_value)
     {
 
       int x_prev = current_location->first;
@@ -91,7 +114,7 @@ class Player
         current_location->first  = SIZE - 1;   
         current_location->second = SIZE - 1;
       }
-      cout<< "[*] Player "<<name<<" moved from (" << x_prev << "," << y_prev<<") -> ("<<current_location->first<<","<< current_location->second<<")"<<endl;
+      cout<< "[*] Player "<<name<<" got "<<dice_value<<" and moved from (" << x_prev << "," << y_prev<<") -> ("<<current_location->first<<","<< current_location->second<<")"<<endl;
 
     }
 
@@ -153,11 +176,14 @@ class Board
     void printBoard()
     {
       cout <<endl<<"[*] The following is the Playingg board"<<endl;
+      cout << "[*] '*' indicates the presence of snake or a ladder at that box"<<endl;
       for (int row = 0; row < SIZE; row++)
       {
         for (int column = 0 ; column< SIZE ; column++)
         {
-          cout << "("<<board_matrix[row][column].first <<","<<board_matrix[row][column].second<<")  ";
+          pair<int,int> &temp_ref = board_matrix[row][column];
+          string s = temp_ref.first != row || temp_ref.second != column?"*":" ";
+          cout << s<<"("<<temp_ref.first <<","<<temp_ref.second<<")  ";
         }
         cout<<endl;
       }
@@ -193,7 +219,7 @@ class Board
 //          cout << "x_cord : "<<x_cord<<", y_cord : "<<y_cord <<endl;
 //          cout << "value at board_matrix : " << board_matrix[x_cord][y_cord].first << " , "<<board_matrix[x_cord][y_cord].second<<endl;
 //
-          player1.update_location( new_location.first , new_location.second);   // Player1 does the dice roll and it's location is updated.
+          player1.update_location( new_location.first , new_location.second , dice_value);   // Player1 does the dice roll and it's location is updated.
         }
         else
         {
@@ -214,7 +240,7 @@ class Board
 //          cout << "x_cord : "<<x_cord<<", y_cord : "<<y_cord <<endl;
 //          cout << "value at board_matrix : " << board_matrix[x_cord][y_cord].first << " , "<<board_matrix[x_cord][y_cord].second<<endl;
 
-          player2.update_location( new_location.first , new_location.second);   // Player2 does the dice roll and it's location is updated.
+          player2.update_location( new_location.first , new_location.second , dice_value);   // Player2 does the dice roll and it's location is updated.
         }
 
         turn = !turn;   // toggle turn for alternate dice roll turns
@@ -230,7 +256,6 @@ class Board
 int main( int argc,  char *argv[])
 {
 
-  Board playing_board;
   string p_name;
 
   cout <<"[*] Enter name of player1 : ";
@@ -241,9 +266,13 @@ int main( int argc,  char *argv[])
   cin>>p_name;
   Player player2(p_name);
 
-
+  Board playing_board;
   playing_board.printBoard();
-  Player winner  = playing_board.playGame( player1, player2 );
+
+  // Adding delay so that the board is printed first and visible for sufficient time.
+  cout <<"[*] Starting game in 3 second"<<endl;
+  sleep(3);
+  Player &winner  = playing_board.playGame( player1, player2 );
   cout << "[*] "<< winner.getName()<<" won the game"<<endl;
 }
 
